@@ -2,12 +2,113 @@
 #include "SDL.h"
 #include "SDL_image.h"
 
+#include "Game.h"
+
+
+// In the class
+// bool SpacePressed = false;
+// In the keyboard function
+// SDL_SPACE
+// bool SpacePressed = false;
+
+const int WINDOW_WIDTH = 800;
+const int WINDOW_HEIGHT = 640;
+
+SDL_Event event;
+int moving_speed = 2;
+
+SDL_Rect sttPlane = { 0, 0, 64, 64 };
+SDL_Rect arvPlane = { 380, 500, 64, 64 };
+
+SDL_Rect sttEnemy = { 0, 0, 87, 68 };
+SDL_Rect arvEnemy = { 360, 100, 87, 68 };
+
+SDL_Rect sttSkill = { 0, 0, 64, 126 };
+SDL_Rect arvSkill = { 380, 350, 64, 126 };
+
+//bullet movement
+void move_up(SDL_Rect& dest, int delta) {
+	dest.y -= delta;
+	if (dest.y <= 0) dest.y = 0;
+}
+
+
+
+void move_up(SDL_Rect& dest) {
+	dest.y -= moving_speed;
+	if (dest.y <= 0) dest.y = 0;
+}
+
+void move_down(SDL_Rect& dest) {
+	dest.y += moving_speed;
+	if (dest.y >= (WINDOW_HEIGHT - 64)) dest.y = WINDOW_HEIGHT - 64;
+}
+
+void move_left(SDL_Rect& dest) {
+	dest.x -= moving_speed;
+	if (dest.x <= 0) dest.x = 0;
+}
+
+void move_right(SDL_Rect& dest) {
+	dest.x += moving_speed;
+	if (dest.x >= (WINDOW_WIDTH - 64)) dest.x = WINDOW_WIDTH - 64;
+}
+
+// control keyboard input interval
+Uint32 keyin_interval = 16;
+Uint32 last_keyin_time = SDL_GetTicks() + keyin_interval;
+
+
+bool check_interval(Uint32& last_time, const Uint32& interval) {
+	Uint32 now = SDL_GetTicks();
+	if ((now - last_time) < (interval)) return false;
+	last_time = now;
+
+	return true;
+}
+
+void on_event() {
+
+	while (SDL_PollEvent(&event)) {
+		if (event.type == SDL_QUIT) return;
+	}
+
+	if (!check_interval(last_keyin_time, keyin_interval)) return;
+
+
+	const Uint8* keyboardState = SDL_GetKeyboardState(NULL);
+
+	if (keyboardState[SDL_SCANCODE_W]) { move_up(arvPlane); }
+	if (keyboardState[SDL_SCANCODE_S]) { move_down(arvPlane); }
+	if (keyboardState[SDL_SCANCODE_A]) { move_left(arvPlane); }
+	if (keyboardState[SDL_SCANCODE_D]) { move_right(arvPlane); }
+	if (keyboardState[SDL_SCANCODE_SPACE]) { move_up(arvSkill); }
+
+		 /*player's bullet , it should be stored in container vector, queue, or ..*/
+
+	 /*bullet interval */
+	//if (!check_interval(_last_bullet_build_time, _bullet_build_interval)) return;
+
+	//GameObject* pBullet = new GameObject(TextureID::bullet1, pPlayer->_rctDst.x + 32, pPlayer->_rctDst.y - 10);
+	//pBullet->set_width_height(6, 32); // it is 6,44 image file, cut it off later 
+	//pBullet->set_speed(7); // bullet is faster than fighter
+
+	//pBullet->set_slop(0, -1); // bullet move 12 oclock.
+	//pBullet->set_self_driving();
+	//vpBullets.emplace_back(pBullet);
+
+	if (keyboardState[SDL_SCANCODE_KP_PLUS]) { moving_speed++; }
+	if (keyboardState[SDL_SCANCODE_KP_MINUS]) { moving_speed--; }
+};
+
+
+
 
 int main(int argc, char* argv[])
 {
 
-	const int WINDOW_WIDTH = 800;
-	const int WINDOW_HEIGHT = 640;
+	//const int WINDOW_WIDTH = 800;
+	//const int WINDOW_HEIGHT = 640;
 
 	SDL_Window* pWindow = nullptr;
 	SDL_Renderer* pRenderer = nullptr;
@@ -49,15 +150,15 @@ int main(int argc, char* argv[])
 	SDL_Texture* ptPlane = SDL_CreateTextureFromSurface(pRenderer, pPlane);
 	SDL_FreeSurface(pPlane);
 	SDL_Rect sttPlane = { 0, 0, 64, 64 };
-	SDL_Rect arvPlane = { 380, 500, 64, 64 };
+	//SDL_Rect arvPlane = { 380, 500, 64, 64 };
 
-	SDL_Surface* pEnemy = IMG_Load("assets/images/enemy/enemy.png");
+	SDL_Surface* pEnemy = IMG_Load("assets/images/enemy/enemyPlane.png");
 	SDL_Texture* ptEnemy = SDL_CreateTextureFromSurface(pRenderer, pEnemy);
 	SDL_FreeSurface(pEnemy);
 	SDL_Rect sttEnemy = { 0, 0, 87, 68 };
-	SDL_Rect arvEnemy = { 360, 100, 87, 68 };
+	/*SDL_Rect arvEnemy = { 360, 100, 87, 68 };*/
 
-	SDL_Surface* pEnemy2 = IMG_Load("assets/images/enemy/enemy2.png");
+	SDL_Surface* pEnemy2 = IMG_Load("assets/images/enemy/enemyPlane2.png");
 	SDL_Texture* ptEnemy2 = SDL_CreateTextureFromSurface(pRenderer, pEnemy2);
 	SDL_FreeSurface(pEnemy2);
 	SDL_Rect sttEnemy2 = { 0, 0, 87, 68 };
@@ -73,23 +174,25 @@ int main(int argc, char* argv[])
 	SDL_Texture* ptNormalSkill = SDL_CreateTextureFromSurface(pRenderer, pNormalSkill);
 	SDL_FreeSurface(pNormalSkill);
 	SDL_Rect sttSkill = { 0, 0, 64, 126 };
-	SDL_Rect arvSkill = { 380, 350, 64, 126 };
+	/*SDL_Rect arvSkill = { 380, 350, 64, 126 };*/
 
-	SDL_Surface* pRock = IMG_Load("assets/images/obstacle/rock.png");
-	SDL_Texture* ptRock = SDL_CreateTextureFromSurface(pRenderer, pRock);
-	SDL_FreeSurface(pRock);
-	SDL_Rect sttRock = { 0, 0, 32, 32 };
-	SDL_Rect arvRock = { 50, 100, 32, 32 };
+	//SDL_Surface* pRock = IMG_Load("assets/images/obstacle/rock.png");
+	//SDL_Texture* ptRock = SDL_CreateTextureFromSurface(pRenderer, pRock);
+	//SDL_FreeSurface(pRock);
+	//SDL_Rect sttRock = { 0, 0, 32, 32 };
+	//SDL_Rect arvRock = { 50, 100, 32, 32 };
 
-	SDL_Surface* pRock2 = IMG_Load("assets/images/obstacle/rock2.png");
-	SDL_Texture* ptRock2 = SDL_CreateTextureFromSurface(pRenderer, pRock2);
-	SDL_FreeSurface(pRock2);
-	SDL_Rect sttRock2 = { 0, 0, 100, 100 };
-	SDL_Rect arvRock2 = { 500, 500, 100, 100 };
+	//SDL_Surface* pRock2 = IMG_Load("assets/images/obstacle/rock2.png");
+	//SDL_Texture* ptRock2 = SDL_CreateTextureFromSurface(pRenderer, pRock2);
+	//SDL_FreeSurface(pRock2);
+	//SDL_Rect sttRock2 = { 0, 0, 100, 100 };
+	//SDL_Rect arvRock2 = { 500, 500, 100, 100 };
 
 	while (true)
 	{
 		SDL_RenderClear(pRenderer);
+
+		on_event();
 
 		SDL_RenderCopy(pRenderer, ptBackground, &stt, &arv);
 		SDL_RenderCopy(pRenderer, ptPlane, &sttPlane, &arvPlane);
@@ -97,8 +200,8 @@ int main(int argc, char* argv[])
 		SDL_RenderCopy(pRenderer, ptEnemy2, &sttEnemy2, &arvEnemy2);
 		SDL_RenderCopy(pRenderer, ptEnemy3, &sttEnemy3, &arvEnemy3);
 		SDL_RenderCopy(pRenderer, ptNormalSkill, &sttSkill, &arvSkill);
-		SDL_RenderCopy(pRenderer, ptRock, &sttRock, &arvRock);
-		SDL_RenderCopy(pRenderer, ptRock2, &sttRock2, &arvRock2);
+		//SDL_RenderCopy(pRenderer, ptRock, &sttRock, &arvRock);
+		//SDL_RenderCopy(pRenderer, ptRock2, &sttRock2, &arvRock2);
 
 		SDL_RenderPresent(pRenderer);
 	}
